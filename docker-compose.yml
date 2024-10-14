@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:17.0-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=teste
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d teste"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  rabbit:
+    image: rabbitmq:4-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./data/rabbitData/data:/var/lib/rabbitmq
+      - ./data/rabbitData/log/:/var/log/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=pass
+      - RABBITMQ_DEFAULT_VHOST=rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+
+  setup:
+    image: 'setup'
+    environment:
+      - RABBITMQ_HOST=rabbit
+      - RABBITMQ_USER=user
+      - RABBITMQ_PASS=pass
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbit:
+        condition: service_healthy
