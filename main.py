@@ -1,6 +1,7 @@
 from db_setup.database import create_db_engine, Base  # Ensure Base is imported
 from models.log_model import LogEntry  # Import your model
 from configs.config import Configs
+from queue_setup.setup import Setup
 import logging
 
 
@@ -20,3 +21,9 @@ try:
     logging.debug("Table creation code executed.")
 except Exception as e:
     logging.error("Error creating database tables: %s", e)
+
+try:
+    logging.info("stating te entrace and exit queue")
+    Setup.start_queues()
+except Exception as e:
+    logging.error(e)
